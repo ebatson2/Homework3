@@ -1,0 +1,112 @@
+---
+title: "HW3_Output"
+format: html
+editor: visual
+---
+
+# Task 0: Set up the environment
+```{r}
+load("hw2_list.rda")
+
+bp_list
+```
+
+
+# Task 1: Control Flow Practice
+
+Create status column:
+```{r}
+bp_list$treatment$status <- character (20)
+bp_list$placebo$status <- character (10)
+
+bp_list
+```
+
+Fill in values of status column for placebo df:
+
+```{r}
+for (i in 1:10){
+  if(bp_list$placebo[i,"post_bp"] <= 120) {
+    bp_list$placebo[i, "status"] <- "optimal"
+  } else if(bp_list$placebo[i,"post_bp"] <= 130) {
+    bp_list$placebo[i, "status"] <- "borderline"
+  } else if(bp_list$placebo[i,"post_bp"] > 130){
+    bp_list$placebo[i, "status"] <- "high"
+  } else {
+    bp_list$placebo[i, "status"] <- NULL
+  }
+}
+
+bp_list$placebo
+```
+
+
+Fill in values of status column for treatment df:
+```{r}
+for (i in 1:20){
+  if(bp_list$treatment[i,"post_bp"] <= 120) {
+    bp_list$treatment[i, "status"] <- "optimal"
+  } else if(bp_list$treatment[i,"post_bp"] <= 130) {
+    bp_list$treatment[i, "status"] <- "borderline"
+  } else if(bp_list$treatment[i,"post_bp"] > 130){
+    bp_list$treatment[i, "status"] <- "high"
+  } else {
+    bp_list$treatment[i, "status"] <- NULL
+  }
+}
+
+bp_list$treatment
+```
+
+# Task 2: Function Writing
+
+Write a function to calculate stats for list of two dataframes:
+
+```{r}
+calc_stat <- function (df_list, r_fn="mean"){
+  # pull stat function
+  my_fun <- get(r_fn)
+  
+  # generate vector containing stats
+  stat_vector <- c(my_fun(df_list[[1]][, "pre_bp"]),
+                 my_fun(df_list[[1]][, "post_bp"]),
+                 my_fun(df_list[[1]][, "diff_bp"]))
+
+  stat_vector[4:6] <- c(my_fun(df_list[[2]][, "pre_bp"]),
+                      my_fun(df_list[[2]][, "post_bp"]),
+                      my_fun(df_list[[2]][, "diff_bp"]))
+
+  # generate names for stats vector
+  name_vector <- vector()
+  
+  for (df_name in c("treatment", "placebo")){
+    name_vector[(length(name_vector)+1):(length(name_vector)+3)] <- c(paste(df_name, c("pre", "post", "diff"), r_fn, sep="_"))
+  }
+  
+  # add names to stats vector
+  names(stat_vector) <- name_vector
+
+  return(stat_vector)
+}
+
+```
+Call the function we created without stat specified:
+```{r}
+fn_output <- calc_stat(bp_list)
+
+fn_output
+```
+
+Call the function with var, sd, min, and max:
+```{r}
+# initialize list to store outputs, save name vector of all the stats
+output_list <- list('var'=vector(), 'sd'=vector(), 'min'=vector(), 'max'=vector())
+stat_names = c('var', 'sd', 'min', 'max')
+
+# loop through the different stats, call the fn, and store the returned value
+for (stat_num in 1:length(stat_names)){
+  output_list[[stat_num]] <- calc_stat(bp_list, stat_names[stat_num])
+}
+
+output_list
+```
